@@ -12,6 +12,7 @@ class MSELoss() :
             y_hat (numpy.ndarray): valeurs prédites, taille = batch * d
 
         Returns:
+        
             numpy.ndarray : vecteur de dimension batch, chaque élément représente l'erreur moyenne au carré pour chaque exemple dans le batch
         """
         batch = y.shape[0]
