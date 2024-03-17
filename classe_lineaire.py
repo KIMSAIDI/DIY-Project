@@ -1,9 +1,9 @@
 import numpy as np
 
 class MSELoss:
-    
-    def __init__(self) :
-        pass
+    """
+    Fonction de perte pour la régression, la perte quadratique moyenne (MSE).
+    """
     
     def forward(self, y, y_hat) :
         """
@@ -45,6 +45,9 @@ class MSELoss:
         
 
 class Linear:
+    """
+    Couche linéaire d'un réseau de neurones.
+    """
 
     def __init__(self, input, output) :
         # Matrice des poids de la couche
