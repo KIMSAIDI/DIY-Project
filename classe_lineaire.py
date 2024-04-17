@@ -90,7 +90,7 @@ class Linear:
         
         # Gradient par rapport aux biais
         grad_b = np.sum(delta, axis=0, keepdims=True)
-        
+
         # Gradient par rapport à l'entrée
         grad_x = np.dot(delta, self.W.T)
         
@@ -107,6 +107,8 @@ class Linear:
         Args:
             learning_rate (float, optional): Taux d'apprentissage pour la mise à jour des poids. Defaults to 1e-2.
         """
+        print("shape de self.W", self.W.shape)
+        
         # Mise à jour des poids
         self.W -= learning_rate * self.grad_W
 

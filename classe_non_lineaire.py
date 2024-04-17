@@ -25,7 +25,7 @@ class TanH(Module):
         return np.tanh(batch)
      
         
-    def backward_delta(self, batch, delta) :
+    def backward(self, batch, delta) :
         """
         Calcule le gradient de la perte par rapport à l'entrée de cette couche.
 
@@ -67,7 +67,7 @@ class Sigmoid(Module):
         return 1 / (1 + np.exp(-batch))
     
     
-    def backward_delta(self, batch, delta):
+    def backward(self, batch, delta):
         """
         Calcule le gradient de la perte par rapport à l'entrée de cette couche.
 

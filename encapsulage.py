@@ -5,7 +5,7 @@ class Sequentiel:
     def __init__(self):
         self.modules = []
         
-    def add(self, module):
+    def add_module(self, module):
         """
         Ajoute un module à la liste des modules du réseau.
         
