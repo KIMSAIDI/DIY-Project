@@ -10,66 +10,74 @@ class Linear(Module):
         super().__init__()      
         self.input = input
         self.output = output
-        self._parameters = np.random.randn(input, output) * 0.01
-       
-        self.W = np.random.randn(input, output) * 0.01
-       
-        self.b = np.zeros((1, output))                  
-        
-        # gradient de W et b pour la mise à jour
-        self.grad_W = np.zeros((input, output))
-        self.grad_b = np.zeros((1, output))
+        self._parameters = 2 * (np.random.rand(self.input, self.output) - 0.5) 
+        self.biais = 2 * (np.random.rand(1, self.output) - 0.5)
+        self.zero_grad()
     
-    def forward(self, matrice) :
+    
+    def zero_grad(self): 
+        """
+        Pour réinitialiser les gradients des poids et des biais.
+        """
+        self._gradient = np.zeros((self.input, self.output))
+        self._gradient_biais = np.zeros((1, self.output))
+    
+    def forward(self, X) :
         """
         Calcul la sortie d'une couche linéaire
 
         Args:
-            matrice (numpy.ndarray): Représente l'ensemble des données d'entrée, taille = batch * input
+            X (numpy.ndarray): Représente l'ensemble des données d'entrée, taille = batch * input
             
         Returns:
             numpy.ndarray : Représente la sortie de la couche linéaire, taille = batch * output 
         """
-        
-        return np.dot(matrice, self.W) + self.b
-
-    def backward(self, x, delta):
-        """
-        Calcule les gradients nécessaires pour la rétropropagation à travers cette couche linéaire.
-
-        Args:
-            x (numpy.ndarray): L'entrée de la couche, taille = batch * input.
-            delta (numpy.ndarray): Le gradient de la perte par rapport à la sortie de cette couche.
-
-        Returns:
-            numpy.ndarray: Le gradient de la perte par rapport à l'entrée de cette couche.
-        """
-        # Gradient par rapport aux poids
-        grad_W = np.dot(x.T, delta)
-        
-        # Gradient par rapport aux biais
-        grad_b = np.sum(delta, axis=0, keepdims=True)
-
-        # Gradient par rapport à l'entrée
-        grad_x = np.dot(delta, self.W.T)
-        
-        # Pour la mise à jour
-        self.grad_W = grad_W
-        self.grad_b = grad_b
-        
-        return grad_x
+        assert X.shape[1] == self.input, ValueError("La taille de l'entrée doit être égale à la taille de l'entrée de la couche linéaire")
+        return np.dot(X, self._parameters) + self.biais
     
-    def update(self, learning_rate=1e-2):
+    def update_parameters(self, gradient_step=1e-3):
         """
         Mise à jour des poids et biais de la couche linéaire en utilisant le taux d'apprentissage.
 
         Args:
-            learning_rate (float, optional): Taux d'apprentissage pour la mise à jour des poids. Defaults to 1e-2.
+            gradient_step : scalaire, pas du gradient
         """
-        print("shape de self.W", self.W.shape)
-        
-        # Mise à jour des poids
-        self.W -= learning_rate * self.grad_W
+        self._parameters -= gradient_step * self._gradient
+        self.biais -= gradient_step * self._gradient_biais
 
-        # Mise à jour des biais
-        self.b -= learning_rate * self.grad_b
+
+    def backward_update_gradient(self, input, delta):
+        """
+        Calcule les gradients nécessaires pour la rétropropagation à travers cette couche linéaire.
+
+        Args:
+            input : L'entrée de la couche, taille = batch * self.input
+            delta : Le gradient de la perte par rapport à la sortie de cette couche, taille = batch * self.output
+
+        Returns:
+            gradient des paramètres : taille = self.input * self.output
+            gradient des biais : taille = 1 * self.output
+        """
+        assert delta.shape[1] == self.output, ValueError("La taille de delta doit être égale à la taille de sortie de la couche linéaire")
+        assert input.shape[1] == self.input, ValueError("La taille de l'entrée doit être égale à la taille de l'entrée de la couche linéaire")
+        
+        self._gradient += np.dot(input.T, delta)
+        self._gradient_biais += np.sum(delta, axis=0, keepdims =True)
+        
+
+    def backward_delta(self, input, delta):
+        """
+        Calcule le gradient de la perte par rapport à l'entrée 
+
+        Args:
+            input : taille = batch * self.input
+            delta : taille = batch * self.output
+            
+        Returns:
+            dérivée de l'erreur : taille = batch * self.input
+        """
+        assert delta.shape[1] == self.output, ValueError("La taille de delta doit être égale à la taille de sortie de la couche linéaire")
+        assert input.shape[1] == self.input, ValueError("La taille de l'entrée doit être égale à la taille de l'entrée de la couche linéaire")
+        return np.dot(delta, self._parameters.T)
+    
+   
