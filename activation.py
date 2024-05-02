@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
-from torch.nn.modules.module import Module
+from module import Module
 
 class TanH(Module):
     def __init__(self):

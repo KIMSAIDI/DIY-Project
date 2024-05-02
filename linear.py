@@ -1,61 +1,20 @@
 import numpy as np
+from module import Module
 
-class MSELoss:
-    """
-    Fonction de perte pour la régression, la perte quadratique moyenne (MSE).
-    """
-    
-    def forward(self, y, y_hat) :
-        """
-        Mesure la différence entre les valeurs prédites par le modèle y_hat 
-        et les valeurs réelles y.
-
-        Args:
-            y (numpy.ndarray): valeurs réelles, taille = batch * d
-            y_hat (numpy.ndarray): valeurs prédites, taille = batch * d
-
-        Returns:
-        
-            numpy.ndarray : vecteur de dimension batch, chaque élément représente l'erreur moyenne au carré pour chaque exemple dans le batch
-        """
-        batch = y.shape[0]
-        d = y.shape[1]
-        errors = np.zeros(batch)  # accumulation des erreurs
-        
-        for i in range(batch) :
-            # Calcul de l'erreur MSE pour chaque exemple et stockage dans le vecteur d'erreurs
-            errors[i] = (np.sum((y[i]-y_hat[i])**2)) / d
-            
-        return np.array(errors)
-    
-    
-    def backward(self, y, y_hat) :
-        """
-        Calcul le gradient de la fonction de perte MSE par rapport aux prédictions
-
-        Args:
-            y (numpy.ndarray): Les valeurs réelles, taille = batch * d.
-            y_hat (numpy.ndarray): Les valeurs prédites, taille = batch * d.
-
-        Returns:
-            numpy.ndarray: Le gradient de la perte par rapport à y_hat, de même taille que y et y_hat.
-        """
-        
-        return 2 * (y_hat - y) / y.shape[1] # Pour normaliser
-        
-
-class Linear:
+class Linear(Module):
     """
     Couche linéaire d'un réseau de neurones.
     """
 
     def __init__(self, input, output) :
-        # Matrice des poids de la couche
-        # Taille : input * output
+        super().__init__()      
+        self.input = input
+        self.output = output
+        self._parameters = np.random.randn(input, output) * 0.01
+       
         self.W = np.random.randn(input, output) * 0.01
-        # Vecteur de biais
-        # Taille : 1 * output
-        self.b = np.zeros((1, output))
+       
+        self.b = np.zeros((1, output))                  
         
         # gradient de W et b pour la mise à jour
         self.grad_W = np.zeros((input, output))

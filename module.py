@@ -1,14 +1,5 @@
 import numpy as np
 
-
-class Loss(object):
-    def forward(self, y, yhat): # fonction coût
-        pass
-
-    def backward(self, y, yhat): # gradient du coût
-        pass
-
-
 class Module(object):
     def __init__(self):
         self._parameters = None # stock les paramètres du module (e.g matrice de poids)
