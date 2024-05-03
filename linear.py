@@ -61,7 +61,7 @@ class Linear(Module):
         assert delta.shape[1] == self.output, ValueError("La taille de delta doit être égale à la taille de sortie de la couche linéaire")
         assert input.shape[1] == self.input, ValueError("La taille de l'entrée doit être égale à la taille de l'entrée de la couche linéaire")
         
-        self._gradient += np.dot(input.T, delta)
+        self._gradient += np.dot(input.T, delta) 
         self._gradient_biais += np.sum(delta, axis=0, keepdims =True)
         
 
