@@ -6,9 +6,6 @@ from module import Module
 class TanH(Module):
     def __init__(self):
         super().__init__()
-        self.parameters = 0
-        self.grad = 0
-        
         
         
     def forward(self, batch) : 
@@ -25,7 +22,7 @@ class TanH(Module):
         return np.tanh(batch)
      
         
-    def backward(self, batch, delta) :
+    def backward_delta(self, batch, delta) :
         """
         Calcule le gradient de la perte par rapport à l'entrée de cette couche.
 
@@ -39,18 +36,17 @@ class TanH(Module):
         
         return delta * (1 - np.tanh(batch)**2)
     
-    def backward_update_gradient(self, grad) :
-        self.grad = grad # accumule les gradients
-        
+    def update_parameters(self, gradient_step) :
+        """ Pas de poids à mettre à jour car les fonctions d'activations d'ont pas de poids à optimiser"""
+        pass
     
-    def update_parameters(self, learning_rate) :    
-        self.parameters -= learning_rate * self.grad # met à jour les paramètres
+    def backward_update_gradient(self, input, delta):
+        pass
 
+   
 class Sigmoid(Module):
     def __init__(self):
         super().__init__()
-        self.parameters = 0
-        self.grad = 0
         
         
     def forward(self, batch):
@@ -67,7 +63,7 @@ class Sigmoid(Module):
         return 1 / (1 + np.exp(-batch))
     
     
-    def backward(self, batch, delta):
+    def backward_delta(self, batch, delta):
         """
         Calcule le gradient de la perte par rapport à l'entrée de cette couche.
 
@@ -79,14 +75,12 @@ class Sigmoid(Module):
             numpy.ndarray : taille = batch.shape
         """
         
-        return delta * self.forward(batch) * (1 - self.forward(batch))
+        return delta * (np.exp(-batch) / (1 + np.exp(-batch)) ** 2)  
     
+    def update_parameters(self, gradient_step) :
+        """ Pas de poids à mettre à jour car les fonctions d'activations d'ont pas de poids à optimiser"""
+        pass
     
-    def backward_update_gradient(self, grad) :
-        self.grad = grad # accumule les gradients
-        
-    
-    def update_parameters(self, learning_rate) :
-        
-        self.parameters -= learning_rate * self.grad # met à jour les paramètres
-    
+    def backward_update_gradient(self, input, delta):
+        pass
+   
