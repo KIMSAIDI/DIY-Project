@@ -27,7 +27,7 @@ class MSELoss(Loss):
             numpy.ndarray : vecteur de dimension batch, chaque élément représente l'erreur moyenne au carré pour chaque exemple dans le batch
         """
         assert y.shape == y_hat.shape, ValueError("MSELoss : Les dimensions de y et y_hat doivent être les mêmes")
-        return np.sum((y- y_hat)**2, axis=1) 
+        return np.sum((y - y_hat)**2, axis=1) 
     
     
     def backward(self, y, y_hat) :
@@ -42,5 +42,5 @@ class MSELoss(Loss):
             numpy.ndarray: Le gradient de la perte par rapport à y_hat, de même taille que y et y_hat.
         """
         assert y.shape == y_hat.shape, ValueError("MSELoss : Les dimensions de y et y_hat doivent être les mêmes")
-        return 2 * (y_hat - y) 
+        return -2 * (y - y_hat) 
         
