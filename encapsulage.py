@@ -24,24 +24,34 @@ class Sequentiel:
         Returns:
             Liste des sorties de chaque module du réseau.
         """
-        list = []
+        liste = []
         for module in self.modules :
-            list.append(module.forward(input))
-        return list
+            liste.append(module.forward(input))
+        return liste
     
-    def backward_delta_seq(self, x, delta):
+    def backward_delta_seq(self, input, delta):
         """
         Calcule le gradient de la perte par rapport à l'entrée du réseau.
         
         Args:
-            x : Entrée du réseau.
+            input : Entrée du réseau.
             delta : Gradient de la perte par rapport à la sortie du réseau.
             
         Returns:
-            numpy.ndarray : Gradient de la perte par rapport à l'entrée du réseau.
+            Liste des gradients de la perte par rapport à l'entrée de chaque module du réseau.
         """
-        # A FAIRE
-        pass
+        liste = []
+        for module in self.modules:
+            list.append(module.backward_delta(input, delta))
+        return liste        
+    
+    def backward_update_gradient_seq(self, input, delta):
+        """
+        Met à jour les gradient de chaque module du réseau.
+        """
+        for module in self.modules:
+            module.backward_update_gradient(input, delta)
+        
             
     def update_parameters_seq(self, gradient_step):
         """ 
@@ -53,5 +63,49 @@ class Sequentiel:
             
     
     
+    
+class Optim() :
+    def __init__(self, net, loss, eps):
+        self.net = net # réseau
+        self.loss = loss
+        self.eps = eps # pas
+        
+        
+    def step(self, batch_x, batch_y) :
+        """
+        Met à jour les paramètres du réseau en utilisant la descente de gradient.
+        
+        Args:
+            batch_x : Entrée du réseau.
+            batch_y : Sortie attendue du réseau.
+        """
+        output = self.net.forward_seq(batch_x)
+        loss = self.loss.forward(output[-1], batch_y)
+        delta = self.loss.backward(output[-1], batch_y)
+        self.net.backward_update_gradient_seq(output[-2], delta)
+        self.net.update_parameters_seq(self.eps)
+        return loss
+    
+    
+    def SGD(self, X, Y, batch_size, nb_epochs):
+        """
+        Entraine le réseau en utilisant la descente de gradient stochastique.
+        
+        Args:
+            X : Entrée du réseau.
+            Y : Sortie attendue du réseau.
+            batch_size : Taille du batch.
+            nb_epochs : Nombre d'itérations.
+        """
+        for i in range(nb_epochs):
+            indices = np.random.permutation(X.shape[0])
+            for j in range(0, X.shape[0], batch_size):
+                batch_x = X[indices[j:j+batch_size]]
+                batch_y = Y[indices[j:j+batch_size]]
+                loss = self.step(batch_x, batch_y)
+            print("Epoch {} : Loss = {}".format(i, loss))
+            
+        
+                  
         
         
