@@ -2,107 +2,130 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-import numpy as np
 
-def generate_data(nb_samples=1000, data_type="gaussian", centers=None, sigmas=None, epsilon=0.02):
-    """Génère des données artificielles.
+# def charger_donnees(fichier_donnees):
+#   """
+#   Charge et prétraite les données d'apprentissage automatique.
+
+#   Args:
+#     fichier_donnees: Le chemin d'accès au fichier contenant les données.
+
+#   Returns:
+#     X: Matrice des données d'entrée (n_échantillons, n_caractéristiques).
+#     y: Vecteur des étiquettes de classe (n_échantillons,).
+#   """
+
+#   # Charger les données brutes
+#   if fichier_donnees.endswith('.csv'):
+#     données = np.genfromtxt(fichier_donnees, delimiter=',')
+#   elif fichier_donnees.endswith('.npy'):
+#     données = np.load(fichier_donnees)
+#   else:
+#     raise ValueError(f"Format de fichier non reconnu: {fichier_donnees}")
+
+#   # Séparer les caractéristiques et les étiquettes de classe
+#   X = données[:, :-1]
+#   y = données[:, -1]
+#   return X, y
+
+
+
+def plot_data(X, y=None):
+    """
+    Affiche des données 2D avec des labels optionnels.
 
     Args:
-        nb_samples (int): Nombre d'exemples.
-        data_type (str): Type de données à générer ("gaussian", "checkerboard").
-        centers (list of tuples): Liste des centres des gaussiennes. Nécessaire si data_type="gaussian".
-        sigmas (list of floats): Liste des écart-types des gaussiennes. Nécessaire si data_type="gaussian".
-        epsilon (float): Bruit dans les données.
+        X (numpy.ndarray): Matrice des données 2D.
+        y (numpy.ndarray, optional): Vecteur des labels (discrets).
+    """
+    cols, marks = ["red", "green", "blue", "orange", "black", "cyan"], ["+", ".", "^", "o", "x", "*"]
+    if y is None:
+        plt.scatter(X[:, 0], X[:, 1], marker="x")
+        return
+    for i, l in enumerate(sorted(list(set(y.flatten())))):
+        plt.scatter(X[y == l, 0], X[y == l, 1], c=cols[i], marker=marks[i])
+
+
+def plot_frontiere(data, f, step=20):
+    """ Trace un graphe de la frontiere de decision de f
+    :param data: donnees
+    :param f: fonction de decision
+    :param step: pas de la grille
+    :return:
+    """
+    grid, x, y = make_grid(data=data, step=step)
+    plt.contourf(x, y, f(grid).reshape(x.shape), colors=('gray', 'blue'), levels=[-1, 0, 1])
+
+
+def create_grid(data=None, x_min=-5, x_max=5, y_min=-5, y_max=5, step_size=20):
+    """
+    Crée une grille de points 2D pour la visualisation.
+
+    Args:
+        data (numpy.ndarray, optional): Données pour calculer les bornes de la grille.
+        x_min (float): Borne inférieure pour l'axe x.
+        x_max (float): Borne supérieure pour l'axe x.
+        y_min (float): Borne inférieure pour l'axe y.
+        y_max (float): Borne supérieure pour l'axe y.
+        step_size (int): Nombre de points dans la grille.
 
     Returns:
-        data (ndarray): Matrice 2D des données.
-        labels (ndarray): Étiquettes des données.
+        tuple: Une matrice 2D contenant les points de la grille, et les grilles x et y.
     """
-    if data_type == "gaussian":
-        if centers is None or sigmas is None:
-            raise ValueError("Les centres et les écart-types des gaussiennes doivent être spécifiés.")
-        num_gaussians = len(centers)
-        if num_gaussians != len(sigmas):
-            raise ValueError("Le nombre de centres et d'écart-types doit être le même.")
-        
-        data = np.empty((0, 2))
-        labels = np.empty(0, dtype=int)
-        for i in range(num_gaussians):
-            samples_per_gaussian = nb_samples // num_gaussians
-            gaussian_samples = np.random.multivariate_normal(centers[i], np.diag([sigmas[i], sigmas[i]]), samples_per_gaussian)
-            data = np.vstack((data, gaussian_samples))
-            labels = np.concatenate((labels, np.full(samples_per_gaussian, i)))
-        
-    elif data_type == "checkerboard":
-        side_length = int(np.sqrt(nb_samples))
-        x_range = np.linspace(-4, 4, side_length)
-        y_range = np.linspace(-4, 4, side_length)
-        xx, yy = np.meshgrid(x_range, y_range)
-        data = np.column_stack((xx.ravel(), yy.ravel()))
-        labels = np.ceil(data[:, 0]) + np.ceil(data[:, 1])
-        labels = 2 * (labels % 2) - 1
-        
-    elif data_type == "gaussian_4":
-        num_gaussians = 4
-        if centers is None or sigmas is None:
-            raise ValueError("Les centres et les écart-types des gaussiennes doivent être spécifiés.")
-        if num_gaussians != len(centers) or num_gaussians != len(sigmas):
-            raise ValueError("Le nombre de centres et d'écart-types doit être le même.")
-        
-        data = np.empty((0, 2))
-        labels = np.empty(0, dtype=int)
-        for i in range(num_gaussians):
-            samples_per_gaussian = nb_samples // num_gaussians
-            gaussian_samples = np.random.multivariate_normal(centers[i], np.diag([sigmas[i], sigmas[i]]), samples_per_gaussian)
-            data = np.vstack((data, gaussian_samples))
-            labels = np.concatenate((labels, np.full(samples_per_gaussian, i)))
-        
-    else:
-        raise ValueError("Type de données non valide.")
+    if data is not None:
+        x_max, x_min = np.max(data[:, 0]) + 0.1, np.min(data[:, 0]) - 0.1
+        y_max, y_min = np.max(data[:, 1]) + 0.1, np.min(data[:, 1]) - 0.1
 
-    # Ajout de bruit
-    if data_type == "gaussian" or data_type == "gaussian_4":  # Ajout de bruit uniquement si les données sont gaussiennes
-        data[:, 0] += np.random.normal(0, epsilon, nb_samples)
-        data[:, 1] += np.random.normal(0, epsilon, nb_samples)
+    x_values = np.linspace(x_min, x_max, step_size)
+    y_values = np.linspace(y_min, y_max, step_size)
+    x_grid, y_grid = np.meshgrid(x_values, y_values)
+    grid_points = np.c_[x_grid.ravel(), y_grid.ravel()]
 
-    # Mélange des données
-    idx = np.random.permutation(range(labels.size))
-    data = data[idx, :]
-    labels = labels[idx]
-
-    return data, labels.reshape(-1, 1)
+    return grid_points, x_grid, y_grid
 
 
-def plot_data(data, labels, titre):
-    """Affiche les points de données visuellement.
-
+def generate_artificial_data(center=1, sigma=0.1, nbex=1000, data_type=0, epsilon=0.02):
+    """
+    Générateur de données artificielles.
+    
     Args:
-        data (ndarray): Matrice 2D des données.
-        labels (ndarray): Étiquettes des données.
+        center (float): Centre des gaussiennes.
+        sigma (float): Écart-type des gaussiennes.
+        nbex (int): Nombre d'exemples.
+        data_type (int): Type de données (0: mélange 2 gaussiennes, 1: mélange 4 gaussiennes, 2: échiquier).
+        epsilon (float): Bruit dans les données.
+        
+    Returns:
+        tuple: data (numpy.ndarray), y (numpy.ndarray)
     """
-    plt.figure(figsize=(8, 6))
-    plt.scatter(data[:, 0], data[:, 1], c=labels, cmap='coolwarm', marker='o', edgecolors='k')
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.title(titre)
-    plt.colorbar(label='Labels')
-    plt.grid(True)
-    plt.show()
-
-
-
-# Générer des données gaussiennes
-centers = [(1, 1), (-1, -1)]
-sigmas = [0.1, 0.1]
-data, labels = generate_data(nb_samples=1000, data_type="gaussian", centers=centers, sigmas=sigmas)
-plot_data(data, labels, 'Visualisation des données d\'un mélange de 2 gaussiennes')
-
-# Générer des données en échiquier
-data, labels = generate_data(nb_samples=1000, data_type="checkerboard")
-plot_data(data, labels, 'Visualisation des données en échiquier')
-
-# Générer des données avec un mélange de 4 gaussiennes
-centers_4 = [(1, 1), (-1, -1), (1, -1), (-1, 1)]
-sigmas_4 = [0.1, 0.1, 0.1, 0.1]
-data, labels = generate_data(nb_samples=1000, data_type="gaussian_4", centers=centers_4, sigmas=sigmas_4)
-plot_data(data, labels, 'Visualisation des données d\'un mélange de 4 gaussiennes')
+    if data_type == 0:
+        # Mélange de 2 gaussiennes
+        pos_samples = np.random.multivariate_normal([center, center], [[sigma, 0], [0, sigma]], nbex // 2)
+        neg_samples = np.random.multivariate_normal([-center, -center], [[sigma, 0], [0, sigma]], nbex // 2)
+        data = np.vstack((pos_samples, neg_samples))
+        y = np.hstack((np.ones(nbex // 2), -np.ones(nbex // 2)))
+    
+    elif data_type == 1:
+        # Mélange de 4 gaussiennes
+        pos_samples1 = np.random.multivariate_normal([center, center], [[sigma, 0], [0, sigma]], nbex // 4)
+        pos_samples2 = np.random.multivariate_normal([-center, -center], [[sigma, 0], [0, sigma]], nbex // 4)
+        neg_samples1 = np.random.multivariate_normal([-center, center], [[sigma, 0], [0, sigma]], nbex // 4)
+        neg_samples2 = np.random.multivariate_normal([center, -center], [[sigma, 0], [0, sigma]], nbex // 4)
+        data = np.vstack((pos_samples1, pos_samples2, neg_samples1, neg_samples2))
+        y = np.hstack((np.ones(nbex // 2), -np.ones(nbex // 2)))
+    
+    elif data_type == 2:
+        # Échiquier
+        data = np.random.uniform(-4, 4, (nbex, 2))
+        y = np.floor(data[:, 0]) + np.floor(data[:, 1])
+        y = 2 * (y % 2) - 1
+    
+    # Ajouter du bruit
+    data += np.random.normal(0, epsilon, data.shape)
+    
+    # Mélanger les données
+    permutation = np.random.permutation(nbex)
+    data = data[permutation]
+    y = y[permutation]
+    
+    return data, y
