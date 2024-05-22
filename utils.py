@@ -46,16 +46,6 @@ def plot_data(X, y=None):
         plt.scatter(X[y == l, 0], X[y == l, 1], c=cols[i], marker=marks[i])
 
 
-def plot_frontiere(data, f, step=20):
-    """ Trace un graphe de la frontiere de decision de f
-    :param data: donnees
-    :param f: fonction de decision
-    :param step: pas de la grille
-    :return:
-    """
-    grid, x, y = make_grid(data=data, step=step)
-    plt.contourf(x, y, f(grid).reshape(x.shape), colors=('gray', 'blue'), levels=[-1, 0, 1])
-
 
 def create_grid(data=None, x_min=-5, x_max=5, y_min=-5, y_max=5, step_size=20):
     """
