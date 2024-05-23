@@ -84,7 +84,7 @@ class CrossEntropyLossLog(Loss) :
         Returns:
             numpy.ndarray : coûtt ; taille = batch_size 
         """
-        return -(y * np.log(yhat + 1e-100) + (1 - y) * np.log(1 - yhat + 1e-100))
+        return -(y * np.log(y_hat + 1e-100) + (1 - y) * np.log(1 - y_hat + 1e-100))
 
     def backward(self, y, yhat):
         """
