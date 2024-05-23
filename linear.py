@@ -13,6 +13,7 @@ class Linear(Module):
         self._parameters = 2 * (np.random.rand(self.input, self.output) - 0.5) 
         self.biais = 2 * (np.random.rand(1, self.output) - 0.5)
         self.zero_grad()
+       
     
     
     def zero_grad(self): 

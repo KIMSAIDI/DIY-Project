@@ -29,6 +29,14 @@ import matplotlib.pyplot as plt
 #   return X, y
 
 
+# def make_grid(data=None,xmin=-5,xmax=5,ymin=-5,ymax=5,step=20):
+#     """ Cree une grille sous forme de matrice 2d de la liste des points de la grille, et les grilles x et y"""
+#     if data is not None:
+#         xmax, xmin, ymax, ymin = np.max(data[:,0]),  np.min(data[:,0]), np.max(data[:,1]), np.min(data[:,1])
+#     x, y =np.meshgrid(np.arange(xmin,xmax,(xmax-xmin)*1./step), np.arange(ymin,ymax,(ymax-ymin)*1./step))
+#     grid=np.c_[x.ravel(),y.ravel()]
+#     return grid, x, y
+
 
 def plot_data(X, y=None):
     """
@@ -47,14 +55,10 @@ def plot_data(X, y=None):
 
 
 def plot_frontiere(data, f, step=20):
-    """ Trace un graphe de la frontiere de decision de f
-    :param data: donnees
-    :param f: fonction de decision
-    :param step: pas de la grille
-    :return:
-    """
-    grid, x, y = make_grid(data=data, step=step)
-    plt.contourf(x, y, f(grid).reshape(x.shape), colors=('gray', 'blue'), levels=[-1, 0, 1])
+    """ Trace la frontiere de decision d'une fonction f"""
+    # pour tracer la frontière de décision
+    grid, x, y = create_grid(data=data, step_size=step)
+    plt.contourf(x, y, f(grid).reshape(x.shape), colors=('cyan', 'beige'), levels=[-1, 0, 1])
 
 
 def create_grid(data=None, x_min=-5, x_max=5, y_min=-5, y_max=5, step_size=20):

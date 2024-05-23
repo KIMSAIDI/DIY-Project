@@ -3,9 +3,9 @@ import copy
 from tqdm import tqdm
 class Sequentiel:
     
-    def __init__(self, modules, labels=None):
+    def __init__(self, modules):
         self.modules = modules
-        self.labels = labels
+      
         
     def add_module(self, module):
         """
@@ -29,7 +29,7 @@ class Sequentiel:
         liste_forwards = [input]
         for module in self.modules:
             liste_forwards.append(module.forward(liste_forwards[-1]))
-        return liste_forwards
+        return liste_forwards[1:]
     
     def backward_delta(self, input, delta):
         """
@@ -44,13 +44,13 @@ class Sequentiel:
         """
         liste_deltas = [delta]
         for i in range(len(self.modules) - 1, 0, -1):
-            liste_deltas.append(self.modules[i].backward_delta(input[i], liste_deltas[-1]))
-        liste_deltas.reverse()
+            self.modules[i].backward_update_gradient(input[i - 1], liste_deltas[-1])
+            liste_deltas.append(self.modules[i].backward_delta(input[i - 1], liste_deltas[-1]))
+
         return liste_deltas
+        
     
-                  
-    
-   
+                
         
     def update_parameters(self, gradient_step):
         """ 
@@ -60,10 +60,23 @@ class Sequentiel:
             module.update_parameters(gradient_step)
             module.zero_grad()
         
-    def predict(self, X):
-        if self.labels is not None:
-            return self.labels(self.forward(x)[0])
-        return self.forward(x)[0]
+    
+    def predict(self, X_test, types):
+        if types == 'soft':
+            softmax = Softmax()
+            return np.argmax(softmax.forward(self.net.forward(X_test)[-1]),axis=1)
+        elif types == 'tanh':
+            out = np.array(self.net.forward(X_test)[-1])
+            return np.where(out >= 0, 1 ,0 )       
+        elif types == 'sig': 
+            out = np.array(self.net.forward(X_test)[-1])
+            return np.where(out >= 0.5, 1 ,0 )
+        elif types == 'enc':
+            return self.forward(X_test)[-1]
+
+
+    def accuracy(self, y_pred, y_test):
+        return np.sum(y_pred == y_test) / len(y_test)
  
 
 class Optim:
@@ -149,46 +162,61 @@ class Optim:
 
     #     return liste_loss
         
-    def SGD(self, X, Y, batch_size, epoch=10,earlystop=100):
-        assert len(X) == len(Y)
-        
-        #shuffle
-        indices = np.random.permutation(len(X))
-        X = X[indices]
-        Y = Y[indices]
-        
+    
+    def SGD(self, data_x, data_y, batch_size, epoch=100):
+        """
+        Effectue une descente de gradient.
+        datax : jeu de données
+        datay : labels correspondans
+        batch_size : taille de batch
+        iter : nombre d'itérations
+        Return : loss
+        """
+        nb_data = len(data_x)
+        nb_batches = nb_data // batch_size
+        if nb_data % batch_size != 0:
+            nb_batches += 1
 
-        #generate batch list
+        liste_loss = []
 
-        batch_X  = [X[i:i + batch_size] for i in range(0, len(X), batch_size)]
-        batch_Y = [Y[i:i + batch_size] for i in range(0, len(Y), batch_size)]
-        
-        mean = []
-        std = []
-        minloss=float("inf")
-        bestepoch = 0
-        stop=0
-        bestModel = self.net
-        for e in range(epoch):
-            tmp = []
-            for x,y in zip(batch_X, batch_Y):
-                tmp.append(np.asarray(self.step(x, y)).mean())
-            tmp = np.asarray(tmp)
-            loss = tmp.mean()
-            stop+=1
-            if(loss < minloss):
-                stop=0
-                bestepoch = e
-                minloss = loss
-                bestModel = copy.deepcopy(self.net)
-            if stop == earlystop:
-                print("early stop best epoch : ",bestepoch)
-                break
-            mean.append(loss)
-            std.append(tmp.std())
-        self.net = bestModel
-        return mean, std
-        
+        for i in tqdm(range(epoch)):
+            # permutter les données
+            perm = np.random.permutation(nb_data)
+            data_x = data_x[perm]
+            data_y = data_y[perm]
+
+            # découpe les l'array en liste d'arrays
+            liste_batch_x = np.array_split(data_x, nb_batches)
+            liste_batch_y = np.array_split(data_y, nb_batches)
+
+            # Effectue la descente de gradient pour chaque batch
+            loss_batch = 0
+            for j in range(nb_batches):
+                batch_x = liste_batch_x[j]
+                batch_y = liste_batch_y[j]
+                loss = self.step(batch_x, batch_y)
+                loss_batch += loss.mean()
+            loss_batch = loss_batch / nb_batches
+            liste_loss.append(loss_batch)
+
+        return liste_loss
+    
+    
+    def predict(self,X_test,types):
+        if types == 'soft':
+            softmax = Softmax()
+            return np.argmax(softmax.forward(self.net.forward(X_test)[-1]),axis=1)
+        elif types == 'conv':
+            softmax = Softmax()
+            return softmax.forward(self.net.forward(X_test)[-1])
+        elif types == 'tanh':
+            out = np.array(self.net.forward(X_test)[-1])
+            return np.where(out >= 0, 1 ,0 )       
+        elif types == 'sig': 
+            out = np.array(self.net.forward(X_test)[-1])
+            return np.where(out >= 0.5, 1 ,0 )
+        elif types == 'enc':
+            return self.forward(x)[0]
     
     def accuracy(self, y_pred, y_test):
         """
@@ -216,4 +244,4 @@ class Optim:
             raise ValueError("y_pred et y_test doivent avoir la même forme.")
         
         # Calcul de l'exactitude
-        return np.where(y == self.net.predict(x), 1, 0).mean()
+        return np.sum(y_pred == y_test)/len(y_test)
