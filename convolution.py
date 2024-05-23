@@ -1,24 +1,25 @@
 import numpy as np
+from module import Module
 
 class Conv1D(Module):
-    def __init__(self, input_channels, output_channels, kernel_size, stride=1, padding=0):
+    def __init__(self, _chan_in, _chan_out, _k_size, stride=1, padding=0):
         super().__init__()
-        self._k_size = k_size
-        self._chan_in = chan_in
-        self._chan_out = chan_out
+        self._k_size = _k_size
+        self._chan_in = _chan_in
+        self._chan_out = _chan_out
         
         self._stride = stride
-        self._parameters = np.random.randn(k_size, chan_in, chan_out) * np.sqrt(2. / (k_size * chan_in))
-        self._bias = np.zeros((1, chan_out))
-        self._gradient = np.zeros((k_size, chan_in, chan_out))
-        self._bias_gradient = np.zeros((1, chan_out))
+        self._parameters = np.random.randn(_k_size, _chan_in, _chan_out) * np.sqrt(2. / (_k_size * _chan_in))
+        self._bias = np.zeros((1, _chan_out))
+        self._gradient = np.zeros((_k_size, _chan_in, _chan_out))
+        self._bias_gradient = np.zeros((1, _chan_out))
                
     def zero_grad(self):
         """
         Réinitialise les gradients des poids et des biais.
         """
         self._gradient = np.zeros_like(self._parameters)
-        self._gradient_bias = np.zeros_like(self.bias)
+        self._bias_gradient = np.zeros_like(self._bias)
     
     def forward(self, X):
         """
@@ -65,16 +66,18 @@ class Conv1D(Module):
             gradient_step : scalaire, pas du gradient
         """
         self._parameters -= gradient_step * self._gradient
-        self._bias -= gradient_step * self._gradient_bias
+        self._bias -= gradient_step * self._bias_gradient
         
         
         
         
 class MaxPool1D(Module):
-    def __init__(self, pool_size, stride):
-        self._pool_size = pool_size
+    def __init__(self, k_size, stride):
+        self._k_size = k_size
         self._stride = stride
-        self._cache = None
+        self._cache = []
+        self._parameters = np.zeros((1, 1))
+        self._gradient = np.zeros((1, 1))
         
         
     def forward(self, X):
@@ -85,17 +88,45 @@ class MaxPool1D(Module):
             X : taille = batch_size * length * chan_in
 
         Returns:
-            numpy.ndarray : taille = batch_size * ((length - pool_size) / stride + 1 ) * chan_in
+            numpy.ndarray : taille = batch_size * ((length - k_size) / stride + 1 ) * chan_in
         """
-        batch_size, length, _ = X.shape
-        out_length = (length - self._pool_size) // self._stride + 1
-        out = np.zeros((batch_size, out_length, self._chan_in))
-        self._cache = np.zeros((batch_size, out_length, self._chan_in))
+        # batch_size, length, _ = X.shape
+        # out_length = (length - self._k_size) // self._stride + 1
+        # out = np.zeros((batch_size, out_length, self._chan_in))
+        # self._cache = np.zeros((batch_size, out_length, self._chan_in))
+        # for i in range(out_length):
+        #     out[:, i, :] = np.max(X[:, i:i+self._k_size, :], axis=1)
+        #     self._cache[:, i, :] = np.argmax(X[:, i:i+self._k_size, :], axis=1)
+        # return out
+        
+        # len_img = np.size(X[0])
+        # nb_img = np.size(X, axis=0)
+
+        # l = int((len_img - self._k_size + 1) / self._stride)
+        # r = len_img - self._k_size + 1
+
+        # output = np.zeros((nb_img, self._chan_out, l))
+
+        # for img in range(nb_img):
+        #     for k in range(self._chan_out):
+        #         i = -self._stride
+        #         j = 0
+        #         while i + self._stride < r:
+        #             output[img, k, j] = (
+        #                 np.max(X[img][i + self._stride:i + self._stride + self._k_size]))
+        #             self.idx.append(img)
+        # return output
+        
+        batch_size, length, chan_in = X.shape
+        out_length = (length - self._k_size) // self._stride + 1
+        out = np.zeros((batch_size, out_length, chan_in))
+        self._cache = np.zeros((batch_size, out_length, chan_in), dtype=int)
+        
         for i in range(out_length):
-            out[:, i, :] = np.max(X[:, i:i+self._pool_size, :], axis=1)
-            self._cache[:, i, :] = np.argmax(X[:, i:i+self._pool_size, :], axis=1)
+            segment = X[:, i*self._stride:i*self._stride+self._k_size, :]
+            out[:, i, :] = np.max(segment, axis=1)
+            self._cache[:, i, :] = np.argmax(segment, axis=1)
         return out
-    
     
     def backward_delta(self, X, delta):
         """
@@ -103,16 +134,23 @@ class MaxPool1D(Module):
 
         Args:
             X : taille = batch_size * length * chan_in
-            delta : taille = batch_size * ((length - pool_size) / stride + 1 ) * chan_in
+            delta : taille = batch_size * ((length - k_size) / stride + 1 ) * chan_in
 
         Returns:
             numpy.ndarray : taille = batch_size * length * chan_in
         """
-        batch_size, length, _ = X.shape
+        # batch_size, length, _ = X.shape
+        # _, out_length, _ = delta.shape
+        # delta_X = np.zeros_like(X)
+        # for i in range(out_length):
+        #     delta_X[:, i:i+self._k_size, :][np.arange(batch_size)[:, None], self._cache[:, i, :], np.arange(self._chan_in)] = delta[:, i, :]
+        # return delta_X
+        batch_size, length, chan_in = X.shape
         _, out_length, _ = delta.shape
         delta_X = np.zeros_like(X)
+        
         for i in range(out_length):
-            delta_X[:, i:i+self._pool_size, :][np.arange(batch_size)[:, None], self._cache[:, i, :], np.arange(self._chan_in)] = delta[:, i, :]
+            delta_X[np.arange(batch_size)[:, None], self._cache[:, i, :], np.arange(chan_in)] += delta[:, i, :]
         return delta_X
     
     

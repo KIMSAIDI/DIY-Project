@@ -119,7 +119,7 @@ class BCELoss(Loss) :
         Returns:
             numpy.ndarray : coût ; taille = batch_size
         """
-        return - (y * np.log( yhat + 1e-20) + (1 - y) * p.log(1 - yhat + 1e-20))
+        return - (y * np.log( yhat + 1e-20) + (1 - y) * np.log(1 - yhat + 1e-20))
     
     def backward(self, y, yhat):
         """
