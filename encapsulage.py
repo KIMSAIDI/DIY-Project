@@ -61,24 +61,7 @@ class Sequentiel:
             module.zero_grad()
         
     
-    def predict(self, X_test, types):
-        if types == 'soft':
-            softmax = Softmax()
-            return np.argmax(softmax.forward(self.net.forward(X_test)[-1]),axis=1)
-        elif types == 'tanh':
-            out = np.array(self.net.forward(X_test)[-1])
-            return np.where(out >= 0, 1 ,0 )       
-        elif types == 'sig': 
-            out = np.array(self.net.forward(X_test)[-1])
-            return np.where(out >= 0.5, 1 ,0 )
-        elif types == 'enc':
-            return self.forward(X_test)[-1]
-
-
-    def accuracy(self, y_pred, y_test):
-        return np.sum(y_pred == y_test) / len(y_test)
- 
-
+    
 class Optim:
     def __init__(self, net, loss, eps):
         self.net = net
@@ -109,97 +92,45 @@ class Optim:
         return loss
     
     
-    # def SGD(self, data_x, data_y, batch_size, epochs=100):
-    #     """
-    #     Effectue une descente de gradient stochastique (SGD).
-        
-    #     Parameters:
-    #         data_x : np.ndarray
-    #             Jeu de données.
-    #         data_y : np.ndarray
-    #             Labels correspondants.
-    #         batch_size : int
-    #             Taille des lots de données.
-    #         epochs : int, optional
-    #             Nombre d'époques (itérations sur l'ensemble des données). Par défaut 100.
-                
-    #     Returns:
-    #         liste_loss : list
-    #             Liste des pertes moyennes par époque.
-    #     """
-        
-    #     # Vérifications de type et de valeur
-    #     if not isinstance(data_x, np.ndarray) or not isinstance(data_y, np.ndarray):
-    #         raise ValueError("data_x et data_y doivent être des tableaux numpy.")
-    #     if not isinstance(batch_size, int) or batch_size <= 0:
-    #         raise ValueError("batch_size doit être un entier positif.")
-    #     if not isinstance(epochs, int) or epochs <= 0:
-    #         raise ValueError("epochs doit être un entier positif.")
-        
-    #     nb_data = len(data_x)
-    #     nb_batches = (nb_data + batch_size - 1) // batch_size  # Calcul du nombre de lots
-
-    #     liste_loss = []
-
-    #     for epoch in tqdm(range(epochs), desc="Epochs"):
-    #         # Permuter les données
-    #         perm = np.random.permutation(nb_data)
-    #         shuffled_x = data_x[perm]
-    #         shuffled_y = data_y[perm]
-
-    #         # Effectue la descente de gradient pour chaque batch
-    #         epoch_loss = 0
-    #         for batch_idx in range(nb_batches):
-    #             start_idx = batch_idx * batch_size
-    #             end_idx = min(start_idx + batch_size, nb_data)
-    #             batch_x = shuffled_x[start_idx:end_idx]
-    #             batch_y = shuffled_y[start_idx:end_idx]
-    #             batch_loss = self.step(batch_x, batch_y)
-    #             epoch_loss += batch_loss.mean()
-            
-    #         epoch_loss /= nb_batches  # Moyenne de la perte pour l'époque
-    #         liste_loss.append(epoch_loss)
-
-    #     return liste_loss
-        
     
-    def SGD(self, data_x, data_y, batch_size, epoch=100):
+    def SGD(self, X_train, y_train, batch_size, epoch=100):
         """
-        Effectue une descente de gradient.
-        datax : jeu de données
-        datay : labels correspondans
-        batch_size : taille de batch
-        iter : nombre d'itérations
-        Return : loss
+        Entraîne le réseau en utilisant la descente de gradient stochastique.
+
+        Args:
+            X_train : Données d'entraînement.
+            y_train : Labels des données d'entraînement.
+            batch_size : Taille des mini-lots.
+            epoch : Nombre d'itérations sur les données d'entraînement.
+
+        Returns:
+            Liste des valeurs de la fonction de perte à chaque itération.
         """
-        nb_data = len(data_x)
+        nb_data = len(X_train)
         nb_batches = nb_data // batch_size
         if nb_data % batch_size != 0:
             nb_batches += 1
 
-        liste_loss = []
+        lloss = []
 
         for i in tqdm(range(epoch)):
-            # permutter les données
             perm = np.random.permutation(nb_data)
-            data_x = data_x[perm]
-            data_y = data_y[perm]
+            X_train = X_train[perm]
+            y_train = y_train[perm]
 
-            # découpe les l'array en liste d'arrays
-            liste_batch_x = np.array_split(data_x, nb_batches)
-            liste_batch_y = np.array_split(data_y, nb_batches)
-
-            # Effectue la descente de gradient pour chaque batch
+            liste_batch_x = np.array_split(X_train, nb_batches)
+            liste_batch_y = np.array_split(y_train, nb_batches)
             loss_batch = 0
             for j in range(nb_batches):
                 batch_x = liste_batch_x[j]
                 batch_y = liste_batch_y[j]
                 loss = self.step(batch_x, batch_y)
                 loss_batch += loss.mean()
+            
             loss_batch = loss_batch / nb_batches
-            liste_loss.append(loss_batch)
+            lloss.append(loss_batch)
 
-        return liste_loss
+        return lloss
     
     
     def predict(self,X_test,types):
@@ -212,36 +143,11 @@ class Optim:
         elif types == 'tanh':
             out = np.array(self.net.forward(X_test)[-1])
             return np.where(out >= 0, 1 ,0 )       
+        
+        elif types == 'enc':
+            return self.forward(x)[0]
         elif types == 'sig': 
             out = np.array(self.net.forward(X_test)[-1])
             return np.where(out >= 0.5, 1 ,0 )
-        elif types == 'enc':
-            return self.forward(x)[0]
     
-    def accuracy(self, y_pred, y_test):
-        """
-        Calcule l'exactitude des prédictions.
-        
-        Parameters:
-            y_pred : np.ndarray
-                Prédictions du modèle.
-            y_test : np.ndarray
-                Labels réels.
-                
-        Returns:
-            float
-                Exactitude des prédictions.
-        """
-        
-        # Vérification des types d'entrée
-        if not isinstance(y_pred, np.ndarray):
-            raise ValueError("y_pred doit être un tableau numpy.")
-        if not isinstance(y_test, np.ndarray):
-            raise ValueError("y_test doit être un tableau numpy.")
-        
-        # Vérification des dimensions
-        if y_pred.shape != y_test.shape:
-            raise ValueError("y_pred et y_test doivent avoir la même forme.")
-        
-        # Calcul de l'exactitude
-        return np.sum(y_pred == y_test)/len(y_test)
+   

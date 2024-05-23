@@ -7,6 +7,54 @@ import seaborn as sns
 
 
 
+def generate_artificial_data(center=1, sigma=0.1, nbex=1000, epsilon=0.02):
+    """
+    Générateur de données artificielles.
+    
+    Args:
+        center (float): Centre des gaussiennes.
+        sigma (float): Écart-type des gaussiennes.
+        nbex (int): Nombre d'exemples.
+        data_type (int): Type de données (0: mélange 2 gaussiennes, 1: mélange 4 gaussiennes, 2: échiquier).
+        epsilon (float): Bruit dans les données.
+        
+    Returns:
+        tuple: data (numpy.ndarray), y (numpy.ndarray)
+    """
+    
+    # mélange 4 gaussiennes
+    pos_samples1 = np.random.multivariate_normal([center, center], [[sigma, 0], [0, sigma]], nbex // 4)
+    pos_samples2 = np.random.multivariate_normal([-center, -center], [[sigma, 0], [0, sigma]], nbex // 4)
+    neg_samples1 = np.random.multivariate_normal([-center, center], [[sigma, 0], [0, sigma]], nbex // 4)
+    neg_samples2 = np.random.multivariate_normal([center, -center], [[sigma, 0], [0, sigma]], nbex // 4)
+    data = np.vstack((pos_samples1, pos_samples2, neg_samples1, neg_samples2))
+    y = np.hstack((np.ones(nbex // 2), -np.ones(nbex // 2)))
+    
+    
+    # ajoute du bruit
+    data += np.random.normal(0, epsilon, data.shape)
+    
+    # mélange les données
+    permutation = np.random.permutation(nbex)
+    data = data[permutation]
+    y = y[permutation]
+    
+    return data, y
+
+def plot_loss(losses):
+    """
+    Affiche l'évolution de la perte au cours de l'entraînement.
+
+    Args:
+        losses (list): Liste des valeurs de la perte.
+    """
+    plt.figure()
+    plt.plot(losses)
+    plt.xlabel('Époque')
+    plt.ylabel('Perte')
+    plt.grid()
+    plt.title('Évolution de la perte au cours de l\'entraînement')
+    plt.show()
 
 def plot_data(X, y=None):
     """
@@ -58,52 +106,6 @@ def create_grid(data=None, x_min=-5, x_max=5, y_min=-5, y_max=5, step_size=20):
     return grid_points, x_grid, y_grid
 
 
-def generate_artificial_data(center=1, sigma=0.1, nbex=1000, data_type=0, epsilon=0.02):
-    """
-    Générateur de données artificielles.
-    
-    Args:
-        center (float): Centre des gaussiennes.
-        sigma (float): Écart-type des gaussiennes.
-        nbex (int): Nombre d'exemples.
-        data_type (int): Type de données (0: mélange 2 gaussiennes, 1: mélange 4 gaussiennes, 2: échiquier).
-        epsilon (float): Bruit dans les données.
-        
-    Returns:
-        tuple: data (numpy.ndarray), y (numpy.ndarray)
-    """
-    if data_type == 0:
-        # Mélange de 2 gaussiennes
-        pos_samples = np.random.multivariate_normal([center, center], [[sigma, 0], [0, sigma]], nbex // 2)
-        neg_samples = np.random.multivariate_normal([-center, -center], [[sigma, 0], [0, sigma]], nbex // 2)
-        data = np.vstack((pos_samples, neg_samples))
-        y = np.hstack((np.ones(nbex // 2), -np.ones(nbex // 2)))
-    
-    elif data_type == 1:
-        # Mélange de 4 gaussiennes
-        pos_samples1 = np.random.multivariate_normal([center, center], [[sigma, 0], [0, sigma]], nbex // 4)
-        pos_samples2 = np.random.multivariate_normal([-center, -center], [[sigma, 0], [0, sigma]], nbex // 4)
-        neg_samples1 = np.random.multivariate_normal([-center, center], [[sigma, 0], [0, sigma]], nbex // 4)
-        neg_samples2 = np.random.multivariate_normal([center, -center], [[sigma, 0], [0, sigma]], nbex // 4)
-        data = np.vstack((pos_samples1, pos_samples2, neg_samples1, neg_samples2))
-        y = np.hstack((np.ones(nbex // 2), -np.ones(nbex // 2)))
-    
-    elif data_type == 2:
-        # Échiquier
-        data = np.random.uniform(-4, 4, (nbex, 2))
-        y = np.floor(data[:, 0]) + np.floor(data[:, 1])
-        y = 2 * (y % 2) - 1
-    
-    # Ajouter du bruit
-    data += np.random.normal(0, epsilon, data.shape)
-    
-    # Mélanger les données
-    permutation = np.random.permutation(nbex)
-    data = data[permutation]
-    y = y[permutation]
-    
-    return data, y
-
 
 def plot_confusion_matrice(y_test, y_test_pred):
     """
@@ -123,6 +125,7 @@ def plot_confusion_matrice(y_test, y_test_pred):
     plt.title('Matrice de confusion')
     plt.show()
     
+
     
 # Évaluation du modèle
 def calculate_accuracy(y_true, y_pred):
@@ -130,17 +133,3 @@ def calculate_accuracy(y_true, y_pred):
     accuracy = np.mean(correct_predictions)
     return accuracy
 
-def plot_loss(losses):
-    """
-    Affiche l'évolution de la perte au cours de l'entraînement.
-
-    Args:
-        losses (list): Liste des valeurs de la perte.
-    """
-    plt.figure()
-    plt.plot(losses)
-    plt.xlabel('Époque')
-    plt.ylabel('Perte')
-    plt.grid()
-    plt.title('Évolution de la perte au cours de l\'entraînement')
-    plt.show()

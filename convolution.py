@@ -60,14 +60,12 @@ class Conv1D(Module):
     
     def update_parameters(self, gradient_step=1e-3):
         """
-        Met à jour les poids et les biais de la couche de convolution en utilisant le taux d'apprentissage.
-
+        met à jour les poids et les biais de la couche de convolution en utilisant le taux d'apprentissage.
         Args:
             gradient_step : scalaire, pas du gradient
         """
         self._parameters -= gradient_step * self._gradient
         self._bias -= gradient_step * self._bias_gradient
-        
         
         
         
@@ -83,39 +81,11 @@ class MaxPool1D(Module):
     def forward(self, X):
         """
         Calcule la sortie de la couche de pooling.
-
         Args:
             X : taille = batch_size * length * chan_in
-
         Returns:
             numpy.ndarray : taille = batch_size * ((length - k_size) / stride + 1 ) * chan_in
         """
-        # batch_size, length, _ = X.shape
-        # out_length = (length - self._k_size) // self._stride + 1
-        # out = np.zeros((batch_size, out_length, self._chan_in))
-        # self._cache = np.zeros((batch_size, out_length, self._chan_in))
-        # for i in range(out_length):
-        #     out[:, i, :] = np.max(X[:, i:i+self._k_size, :], axis=1)
-        #     self._cache[:, i, :] = np.argmax(X[:, i:i+self._k_size, :], axis=1)
-        # return out
-        
-        # len_img = np.size(X[0])
-        # nb_img = np.size(X, axis=0)
-
-        # l = int((len_img - self._k_size + 1) / self._stride)
-        # r = len_img - self._k_size + 1
-
-        # output = np.zeros((nb_img, self._chan_out, l))
-
-        # for img in range(nb_img):
-        #     for k in range(self._chan_out):
-        #         i = -self._stride
-        #         j = 0
-        #         while i + self._stride < r:
-        #             output[img, k, j] = (
-        #                 np.max(X[img][i + self._stride:i + self._stride + self._k_size]))
-        #             self.idx.append(img)
-        # return output
         
         batch_size, length, chan_in = X.shape
         out_length = (length - self._k_size) // self._stride + 1
@@ -139,12 +109,6 @@ class MaxPool1D(Module):
         Returns:
             numpy.ndarray : taille = batch_size * length * chan_in
         """
-        # batch_size, length, _ = X.shape
-        # _, out_length, _ = delta.shape
-        # delta_X = np.zeros_like(X)
-        # for i in range(out_length):
-        #     delta_X[:, i:i+self._k_size, :][np.arange(batch_size)[:, None], self._cache[:, i, :], np.arange(self._chan_in)] = delta[:, i, :]
-        # return delta_X
         batch_size, length, chan_in = X.shape
         _, out_length, _ = delta.shape
         delta_X = np.zeros_like(X)
