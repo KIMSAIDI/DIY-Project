@@ -3,6 +3,7 @@ import torch
 import matplotlib.pyplot as plt
 from module import Module
 
+
 class TanH(Module):
     def __init__(self):
         super().__init__()
@@ -143,6 +144,8 @@ class ReLU(Module):
             
         Returns: 
             numpy.ndarray : taille = batch.shape
+        
+        
         """
         
         return np.maximum(0, batch)
@@ -167,3 +170,7 @@ class ReLU(Module):
     
     def backward_update_gradient(self, input, delta):
         pass
+
+
+
+
