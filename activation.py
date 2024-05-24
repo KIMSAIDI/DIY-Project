@@ -92,6 +92,7 @@ class Softmax(Module):
         super().__init__()
         
         
+        
     def forward(self, batch):
         """
         Calcule la softmax de chaque élément de l'entrée batch.

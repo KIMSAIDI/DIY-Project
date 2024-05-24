@@ -30,7 +30,7 @@ def generate_artificial_data(center=1, sigma=0.1, nbex=1000, epsilon=0.02):
     data = np.vstack((pos_samples1, pos_samples2, neg_samples1, neg_samples2))
     y = np.hstack((np.ones(nbex // 2), -np.ones(nbex // 2)))
     
-    
+
     # ajoute du bruit
     data += np.random.normal(0, epsilon, data.shape)
     

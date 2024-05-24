@@ -1,6 +1,6 @@
 import numpy as np
 from module import Module
-
+from activation import *
 class Conv1D(Module):
     def __init__(self, _chan_in, _chan_out, _k_size, stride=1, padding=0):
         super().__init__()

@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 from tqdm import tqdm
+from activation import *
 class Sequentiel:
     
     def __init__(self, modules):
@@ -134,19 +135,21 @@ class Optim:
     
     
     def predict(self,X_test,types):
-        if types == 'soft':
+        if types == 'softmax':
             softmax = Softmax()
             return np.argmax(softmax.forward(self.net.forward(X_test)[-1]),axis=1)
+        
         elif types == 'conv':
             softmax = Softmax()
             return softmax.forward(self.net.forward(X_test)[-1])
-        elif types == 'tanh':
+        
+        elif types == 'tanH':
             out = np.array(self.net.forward(X_test)[-1])
             return np.where(out >= 0, 1 ,0 )       
         
         elif types == 'enc':
             return self.forward(x)[0]
-        elif types == 'sig': 
+        elif types == 'sigmoid': 
             out = np.array(self.net.forward(X_test)[-1])
             return np.where(out >= 0.5, 1 ,0 )
     

@@ -111,7 +111,6 @@ class CrossEntropyLossSoftmax(Loss) :
         return np.exp(yhat) / np.sum(np.exp(yhat), axis=1).reshape((-1, 1)) - y
     
     
-    
 class BCELoss(Loss) :
     
     def forward(self, y, yhat):
